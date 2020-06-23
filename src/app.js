@@ -26,21 +26,12 @@ import KeplerGl from 'kepler.gl';
 import {addDataToMap} from 'kepler.gl/actions';
 // Kepler.gl Data processing APIs
 import Processors from 'kepler.gl/processors';
-// Edges data
-// import linkData from './data/link-data.csv';
-// import nycTrips from './data/nyc-trips.csv';
-// import allData from './data/kepler_viz_data.csv';
 // Kepler.gl Schema APIs
 import KeplerGlSchema from 'kepler.gl/schemas';
 
 import Button from './button';
 import DropdownButton from './dropdown-button';
-import Dropdown from 'react-dropdown';
 import downloadJsonFile from "./file-download";
-import {loadFiles} from 'kepler.gl/actions';
-import {loadRemoteMap} from './actions';
-
-// import DropdownButton from 'react-bootstrap/DropdownButton';
 
 //TODO: Figure out what is happening to the environment variable
 // const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN; // eslint-disable-line
@@ -53,38 +44,18 @@ class App extends Component {
 
   constructor(props) {
     super(props)
-    // this.state = {
-    //     data_files: [
-    //       { 
-    //         id: 1,
-    //         name: "TokyoArea-node-tokyo"
-    //       }, 
-    //       { 
-    //         id: 2,
-    //         name: "TokyoArea-link-tokyo"
-    //       },
-    //       { 
-    //         id: 3,
-    //         name: "TokyoArea-node-kanagawa"
-    //       }
-    //     ],
-    // }
     this.state = {
       data_files: []
     }
   }
 
   componentDidMount() {
-    console.log(this.state);
     const api_call = 'http://localhost:8000/fetch/'; 
     fetch(api_call)
     .then(res => res.json())
     .then((data) => {
-      console.log(data.filenames);
-      // this.state = {
-      //   data_files: data.filenames
-      // }
       this.setState({data_files: data.filenames})
+      console.log(this.state.data_files);
     })
     .catch(console.log);
   }
@@ -102,8 +73,10 @@ class App extends Component {
           label: data_file.name
         }
       };
+      const config_json = JSON.parse(data_file.config);
+      console.log(config_json);
       // addDataToMap action to inject dataset into kepler.gl instance
-      this.props.dispatch(addDataToMap({datasets: dataset}));
+      this.props.dispatch(addDataToMap({datasets: dataset, config: config_json}));
     })
     .catch(console.log);
   };
@@ -127,6 +100,7 @@ class App extends Component {
   render() {
     return (
       <div style={{position: 'absolute', width: '100%', height: '100%', minHeight: '70vh'}}>
+        <Button onClick={this.exportMapConfig}>Export Config</Button>
         <DropdownButton
           title="Select dataset"
           data_files={this.state.data_files}
