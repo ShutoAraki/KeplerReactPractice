@@ -31,6 +31,7 @@ import KeplerGlSchema from 'kepler.gl/schemas';
 
 import Button from './button';
 import DropdownButton from './dropdown-button';
+import Spinner from './spinner';
 import downloadJsonFile from "./file-download";
 
 //TODO: Figure out what is happening to the environment variable
@@ -45,22 +46,24 @@ class App extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      data_files: []
+      data_files: [],
+      isLoading: false
     }
   }
 
   componentDidMount() {
+    // Get a list of files (id, name, config) --> Save it as data_files state
     const api_call = 'http://localhost:8000/fetch/'; 
     fetch(api_call)
     .then(res => res.json())
     .then((data) => {
-      this.setState({data_files: data.filenames})
-      console.log(this.state.data_files);
+      this.setState({data_files: data.filenames});
     })
     .catch(console.log);
   }
 
   getData = (data_file) => {
+    this.setState({isLoading: true});
     const api_call = 'http://localhost:8000/fetch/' + data_file.name;
     fetch(api_call)
     .then(res => res.text())
@@ -77,6 +80,7 @@ class App extends Component {
       console.log(config_json);
       // addDataToMap action to inject dataset into kepler.gl instance
       this.props.dispatch(addDataToMap({datasets: dataset, config: config_json}));
+      this.setState({isLoading: false});
     })
     .catch(console.log);
   };
@@ -106,6 +110,7 @@ class App extends Component {
           data_files={this.state.data_files}
           getData={this.getData}
         />
+        <Spinner isLoading={this.state.isLoading}/>
         <AutoSizer>
           {({height, width}) => (
             <KeplerGl
