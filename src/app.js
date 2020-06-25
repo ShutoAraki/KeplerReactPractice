@@ -30,9 +30,10 @@ import Processors from 'kepler.gl/processors';
 import KeplerGlSchema from 'kepler.gl/schemas';
 
 import Button from './button';
-import DropdownButton from './dropdown-button';
+import DatasetSelector from './dropdown-button';
 import Spinner from './spinner';
 import downloadJsonFile from "./file-download";
+import defaultConfig from './defaultConfig.json';
 
 //TODO: Figure out what is happening to the environment variable
 // const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN; // eslint-disable-line
@@ -47,8 +48,10 @@ class App extends Component {
     super(props)
     this.state = {
       data_files: [],
-      isLoading: false
+      isLoading: false,
+      selectedColumns: {}
     }
+    this.getData = this.getData.bind(this);
   }
 
   componentDidMount() {
@@ -60,11 +63,26 @@ class App extends Component {
       this.setState({data_files: data.filenames});
     })
     .catch(console.log);
+    this.initMap();
   }
 
-  getData = (data_file) => {
+  initMap = () => {
+    const geom_data = {
+      'id': 23,
+      'name': 'geom_only.csv',
+      'config': defaultConfig,
+      'columns': ['all', 'geometry', 'etc']
+    }
+    this.getData(geom_data, true);
+  }
+
+  getData(data_file, includeConfig=false) {
     this.setState({isLoading: true});
-    const api_call = 'http://localhost:8000/fetch/' + data_file.name;
+    console.log(this.state);
+    const api_call = 'http://localhost:8000/fetch/' + data_file.name + '|' + data_file.columns;
+    // const api_call = 'http://localhost:8000/fetch/' + data_file.name;
+    console.log("API CALL");
+    console.log(api_call);
     fetch(api_call)
     .then(res => res.text())
     .then((data) => {
@@ -77,13 +95,37 @@ class App extends Component {
         }
       };
       const config_json = JSON.parse(data_file.config);
-      console.log(config_json);
+      const current_config = this.getMapConfig();
       // addDataToMap action to inject dataset into kepler.gl instance
-      this.props.dispatch(addDataToMap({datasets: dataset, config: config_json}));
-      this.setState({isLoading: false});
-    })
-    .catch(console.log);
+      // Refer to https://github.com/keplergl/kepler.gl#6-how-to-add-data-to-map
+      if (includeConfig) {
+        this.props.dispatch(addDataToMap(
+                  {
+                    datasets: dataset, 
+                    config: config_json,
+                    options: {
+                      keepExistingConfig: true
+                    }
+                  }
+            )
+        );
+      } else {
+        this.props.dispatch(addDataToMap(
+                  {
+                    datasets: dataset,
+                    option: {
+                      keepExistingConfig: true
+                    }
+                  }
+             )
+          );
+        }
+      }
+    )
+    .catch(console.log)
+    .finally(this.setState({isLoading: false}));
   };
+
 
   getMapConfig() {
     // retrieve kepler.gl store
@@ -105,7 +147,7 @@ class App extends Component {
     return (
       <div style={{position: 'absolute', width: '100%', height: '100%', minHeight: '70vh'}}>
         <Button onClick={this.exportMapConfig}>Export Config</Button>
-        <DropdownButton
+        <DatasetSelector
           title="Select dataset"
           data_files={this.state.data_files}
           getData={this.getData}
@@ -118,6 +160,7 @@ class App extends Component {
               id="map"
               width={width}
               height={height}
+              appName="Best Basho Visualizer"
             />
           )}
         </AutoSizer>
