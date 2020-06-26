@@ -49,7 +49,6 @@ class App extends Component {
     this.state = {
       data_files: [],
       isLoading: false,
-      selectedColumns: {}
     }
     this.getData = this.getData.bind(this);
   }
@@ -71,14 +70,14 @@ class App extends Component {
       'id': 23,
       'name': 'geom_only.csv',
       'config': defaultConfig,
-      'columns': ['all', 'geometry', 'etc']
+      'all_columns': 'geometry',
+      'columns': ['all']
     }
     this.getData(geom_data, true);
   }
 
   getData(data_file, includeConfig=false) {
     this.setState({isLoading: true});
-    console.log(this.state);
     const api_call = 'http://localhost:8000/fetch/' + data_file.name + '|' + data_file.columns;
     // const api_call = 'http://localhost:8000/fetch/' + data_file.name;
     console.log("API CALL");
@@ -90,12 +89,14 @@ class App extends Component {
       const dataset = {
         data: processedData,
         info: {
-          id: data_file.id,
+          id: data_file.name,
           label: data_file.name
         }
       };
+      console.log("Dataset info");
+      console.log(dataset);
       const config_json = JSON.parse(data_file.config);
-      const current_config = this.getMapConfig();
+      this.setState({isLoading: false})
       // addDataToMap action to inject dataset into kepler.gl instance
       // Refer to https://github.com/keplergl/kepler.gl#6-how-to-add-data-to-map
       if (includeConfig) {

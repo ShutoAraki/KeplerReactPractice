@@ -3,7 +3,7 @@ import React from 'react';
 const spinnerStyle = {
     position: 'absolute',
     zIndex: 100,
-    top: 35,
+    top: 75,
     right: 380
 };
 

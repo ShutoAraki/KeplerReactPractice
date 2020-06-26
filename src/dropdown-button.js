@@ -68,34 +68,41 @@ class DatasetSelector extends React.Component {
             overflowX: 'hidden'
         };
 
+        const buttonStyle = {
+            float: 'right'
+        }
+
         return (
-            <div className="dropdown">
-                <button style={dropdownStyle} type="button" className="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    {this.props.title}
-                </button>
-                <div style={scrollableMenu} className="dropdown-menu">
-                    {
-                        this.props.data_files.map(data_file => (
-                            <div className="dropdown-item" key={data_file.id}>
-                                <div className="dropdown">
-                                    <button type="button" className="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    {data_file.name}
-                                    </button>
-                                    
-                                    <div className="dropdown-submenu">
-                                        <select className="selectpicker" multiple={true} onChange={this.addColumn}>
-                                            {data_file.columns.map(column_name => (
-                                                <option className="dropdown-item" value={data_file.name + ":" + column_name} key={column_name}>{column_name}</option>
-                                            ))}
-                                        </select>
+            <div>
+                <div className="dropdown">
+                    <button style={dropdownStyle} type="button" className="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {this.props.title}
+                    </button>
+                    <div style={scrollableMenu} className="dropdown-menu">
+                        {
+                            this.props.data_files.map(data_file => (
+                                <div className="dropdown-item" key={data_file.id}>
+                                    <div className="dropdown">
+                                        <button type="button" className="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        {data_file.name}
+                                        </button>
+                                        
+                                        <div style={scrollableMenu} className="dropdown-submenu">
+                                            <select className="selectpicker" multiple={true} onChange={this.addColumn}>
+                                                {data_file.all_columns.map(column_name => (
+                                                    <option className="dropdown-item" value={data_file.name + ":" + column_name} key={column_name}>{column_name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))
-                    }
+                            ))
+                        }
+                    </div>
                 </div>
                 <button type="button" className="btn btn-primary" onClick={this.submitSelections}>Load the data</button>
             </div>
+            
         ) 
     }
 }
