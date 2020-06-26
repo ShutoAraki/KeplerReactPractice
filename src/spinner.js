@@ -15,7 +15,7 @@ function Spinner(props) {
             </div>
         );
     } else {
-        return null;
+        return (<div></div>);
     }
 }
 

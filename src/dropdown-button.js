@@ -1,4 +1,5 @@
 import React from 'react';
+import Button from './button';
 
 class DatasetSelector extends React.Component {
     constructor(props) {
@@ -64,7 +65,7 @@ class DatasetSelector extends React.Component {
         
         const scrollableMenu = {
             height: 'auto',
-            maxHeight: '500px',
+            maxHeight: '300px',
             overflowX: 'hidden'
         };
 
@@ -93,14 +94,25 @@ class DatasetSelector extends React.Component {
                                                     <option className="dropdown-item" value={data_file.name + ":" + column_name} key={column_name}>{column_name}</option>
                                                 ))}
                                             </select>
+                                            {/* <div className="form-check">
+                                                {data_file.all_columns.map(column_name => (
+                                                    <div key={column_name}>
+                                                        <input type="checkbox" className="form-check-input" id="exampleCheck1" onChange={this.addColumn}/>
+                                                        <label className="form-check-label" value={data_file.name + ":" + column_name} for="exampleCheck1">{column_name}</label>
+                                                    </div>
+                                                ))}
+                                            </div> */}
                                         </div>
+
                                     </div>
                                 </div>
                             ))
+
                         }
                     </div>
                 </div>
-                <button type="button" className="btn btn-primary" onClick={this.submitSelections}>Load the data</button>
+                {/* <button type="button" className="btn btn-primary" onClick={this.submitSelections}>Load the data</button> */}
+                <Button onClick={this.submitSelections}>Load the data</Button>
             </div>
             
         ) 
