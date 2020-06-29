@@ -29,7 +29,7 @@ import Processors from 'kepler.gl/processors';
 // Kepler.gl Schema APIs
 import KeplerGlSchema from 'kepler.gl/schemas';
 
-import DatasetSelector from './dropdown-button';
+import DatasetSelector from './data-selector';
 import Spinner from './spinner';
 import downloadJsonFile from "./file-download";
 import defaultConfig from './defaultConfig.json';
