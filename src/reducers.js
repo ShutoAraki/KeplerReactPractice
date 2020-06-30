@@ -29,9 +29,46 @@ const initialAppState = {
   loaded: false
 };
 
+const customizedKeplerGlReducer = keplerGlReducer
+  .initialState({
+    uiState: {
+      // hide side panel to disallower user customize the map
+      // readOnly: true,
+
+      // customize which map control button to show
+      mapControls: {
+        visibleLayers: {
+          show: false
+        },
+        mapLegend: {
+          show: true
+        },
+        toggle3d: {
+          show: true 
+        },
+        splitMap: {
+          show: false
+        }
+      },
+      
+      // hide the initial data load modal
+      currentModal: null
+    }
+  })
+  // handle additional actions
+  .plugin({
+    HIDE_AND_SHOW_SIDE_PANEL: (state, action) => ({
+      ...state,
+      uiState: {
+        ...state.uiState,
+        readOnly: !state.uiState.readOnly
+      }
+    })
+  });
+
 const reducers = combineReducers({
   // mount keplerGl reducer
-  keplerGl: keplerGlReducer,
+  keplerGl: customizedKeplerGlReducer,
   app: handleActions({
     // you can put your app reducer here
   }, initialAppState),

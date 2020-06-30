@@ -6,7 +6,8 @@ class DatasetSelector extends React.Component {
         super(props);
         this.state = {
             data_type: "Hex -> Chome",
-            selectedColumns: []
+            selectedColumns: [],
+            isChecked: this.props.filename2bool
         };
         this.switchHexChomeText = this.switchHexChomeText.bind(this);
     }
@@ -26,11 +27,13 @@ class DatasetSelector extends React.Component {
         const column_name = event.target.value;
         if (event.target.checked) {
             this.state.selectedColumns.push(column_name);
-            console.log(JSON.stringify(this.state));
+            this.state.isChecked[column_name] = true;
         } else {
             this.state.selectedColumns = this.removeA(this.state.selectedColumns, column_name);
+            this.state.isChecked[column_name] = false;
         }
         console.log(this.state.selectedColumns);
+        console.log(this.state.isChecked);
     }
 
     submitSelections = () => {
@@ -73,7 +76,8 @@ class DatasetSelector extends React.Component {
             width: WIDTH + 'px',
             height: '40px',
             margin: '30px',
-            textAlign: 'center'
+            textAlign: 'center',
+            backgroundImage: "linear-gradient(to right, rgba(78,125,203,0.7), rgba(65,148,222,0.7) 24%, rgba(0,163,163,0.7))",
         };
 
         const accordionStyle = {
@@ -86,40 +90,42 @@ class DatasetSelector extends React.Component {
             margin: '30px',
             // textAlign: 'center'
         };
+
+        const cardButtonStyle = {
+            // backgroundImage: "linear-gradient(to right, rgba(78,125,203,0.5), rgba(65,148,222,0.5) 24%, rgba(0,163,163,0.5))" 
+        };
         
         const scrollableMenu = {
             width: WIDTH + 'px',
             height: '200px',
             maxHeight: '200px',
-            overflowX: 'hidden'
+            overflowX: 'hidden',
+            // backgroundColor: "red"
+            // backgroundImage: "linear-gradient(to right, rgba(78,125,203,0.5), rgba(65,148,222,0.5) 24%, rgba(0,163,163,0.5))",
         };
 
         const cardStyle = {
             width: WIDTH + 'px',
             margin: '5px',
-            fontSize: '1vw',
-            textAlight: 'left'
+            fontSize: '12pt',
+            textAlign: 'left',
+            backgroundColor: "transparent"
         };
 
         const dataType = this.state.data_type.split(" ")[0].toUpperCase();
 
         // Grab only the current data type and sort it by the topic name alphabetically
-        const filteredDataFiles = this.props.data_files.filter(word => word.name.split("-")[0] === dataType.toLowerCase() + 'Data').sort((a, b) => a.name.split("-")[1].localeCompare(b.name.split("-")[1]));
-        {/* <select style={scrollableMenu} multiple={true} onChange={this.addColumn}>
-                                    {data_file.all_columns.map(column_name => (
-                                       <option style={cardStyle} value={data_file.name + ":" + column_name} key={column_name}>{column_name}</option> 
-                                    ))}
-                                </select> */}
+        const filteredDataFiles = this.props.data_files.filter(word => word.name.split("-")[0] === dataType.toLowerCase() + 'Data').sort((a, b) => a.name.split("-")[1].localeCompare(b.name.split("-")[1]));   
         return (
             <div style={dataSelectorStyle} id="data-selector">
-                <button style={selectButtonStyle} className="btn btn-primary" onClick={this.switchHexChomeText}>
+                <button style={selectButtonStyle} className="btn" onClick={this.switchHexChomeText}>
                     <b>{dataType}</b><small>{this.state.data_type.split(" ").slice(1, 3)}</small>
                 </button>
 
                 <div style={accordionStyle} id="accordion">
                     {filteredDataFiles.map(data_file => (
                         <div className="card" key={data_file.id}>
-                                <button className="btn btn-link dropdown-toggle" data-toggle="collapse" data-target={"#collapse" + data_file.id} aria-expanded="true" aria-controls={"collapse" + data_file.id}>
+                                <button style={cardButtonStyle} className="btn btn-link dropdown-toggle" data-toggle="collapse" data-target={"#collapse" + data_file.id} aria-expanded="true" aria-controls={"collapse" + data_file.id}>
                                     {data_file.name.split("-")[1]}
                                 </button>
                             <div style={scrollableMenu} id={"collapse" + data_file.id} className="collapse" aria-labelledby={"heading" + data_file.id} data-parent="#accordion">

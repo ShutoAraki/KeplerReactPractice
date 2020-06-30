@@ -23,7 +23,7 @@ import {connect} from 'react-redux';
 import AutoSizer from 'react-virtualized/dist/commonjs/AutoSizer';
 import KeplerGl from 'kepler.gl';
 // Kepler.gl actions
-import {addDataToMap, receiveMapConfig} from 'kepler.gl/actions';
+import {addDataToMap, receiveMapConfig, addLayer} from 'kepler.gl/actions';
 // Kepler.gl Data processing APIs
 import Processors from 'kepler.gl/processors';
 // Kepler.gl Schema APIs
@@ -48,8 +48,8 @@ class App extends Component {
     this.state = {
       data_files: [],
       isLoading: false,
+      filename2bool: {}
     }
-    this.getData = this.getData.bind(this);
     this.getAggData = this.getAggData.bind(this);
   };
 
@@ -63,20 +63,20 @@ class App extends Component {
       this.setState({data_files: data.filenames});
     })
     .catch(console.log);
+    
+    this.resetConfig();
+    this.state.data_files.map((filename) => {
+      filename.all_columns.map((column_name) => {
+        const full_filename = filename.name + ':' + column_name;
+        this.state.filename2bool[full_filename] = false;
+      })
+    });
+  };
+
+  resetConfig() {
     const config = JSON.parse(defaultConfig);
     const parsedConfig = KeplerGlSchema.parseSavedConfig(config);
     this.props.dispatch(receiveMapConfig(parsedConfig));
-  };
-
-  initMap = () => {
-    const geom_data = {
-      'id': 23,
-      'name': 'geom_only.csv',
-      'config': defaultConfig,
-      'all_columns': 'all',
-      'columns': ['all']
-    }
-    this.getData(geom_data, true);
   };
 
   // It parses the naming format to extract appropriate data name string
@@ -114,64 +114,96 @@ class App extends Component {
       };
       console.log("Dataset info");
       console.log(dataset);
-      this.props.dispatch(addDataToMap({datasets: dataset, 
-                                        config: defaultConfig
-                                        }));
+      this.resetConfig();
+      this.props.dispatch(addDataToMap({datasets: dataset}));
+      this.props.dispatch(addLayer(
+        {
+          "id": "v39d7oa",
+          "type": "geojson",
+          "config": {
+            "dataId": data_name,
+            "label": data_name,
+            "color": [
+              246,
+              209,
+              138,
+              255
+            ],
+            "columns": {
+              "geojson": "geometry"
+            },
+            "isVisible": true,
+            "visConfig": {
+              "opacity": 0.8,
+              "thickness": 0.5,
+              "colorRange": {
+                "name": "Global Warming",
+                "type": "sequential",
+                "category": "Uber",
+                "colors": [
+                  "#5A1846",
+                  "#900C3F",
+                  "#C70039",
+                  "#E3611C",
+                  "#F1920E",
+                  "#FFC300"
+                ]
+              },
+              "radius": 10,
+              "sizeRange": [
+                0,
+                10
+              ],
+              "radiusRange": [
+                0,
+                50
+              ],
+              "heightRange": [
+                0,
+                500
+              ],
+              "elevationScale": 5,
+              "hi-precision": false,
+              "stroked": false,
+              "filled": true,
+              "enable3d": false,
+              "wireframe": false
+            },
+            "textLabel": {
+              "field": null,
+              "color": [
+                255,
+                255,
+                255
+              ],
+              "size": 50,
+              "offset": [
+                0,
+                0
+              ],
+              "anchor": "middle"
+            }
+          },
+          "visualChannels": {
+            "colorField": {
+              "name": "crimeTotalRate",
+              "type": "real"
+            },
+            "colorScale": "quantile",
+            "sizeField": null,
+            "sizeScale": "linear",
+            "heightField": null,
+            "heightScale": "linear",
+            "radiusField": null,
+            "radiusScale": "linear"
+          }
+        }
+      ));
+
       this.setState({isLoading: false});
     })
     .catch(console.log);
   };
-
-  getData(data_file, includeConfig=false) {
-    this.setState({isLoading: true});
-    const api_call = 'http://localhost:8000/fetch/' + data_file.name + '|' + data_file.columns;
-    // const api_call = 'http://localhost:8000/fetch/' + data_file.name;
-    console.log("API CALL");
-    console.log(api_call);
-    fetch(api_call)
-    .then(res => res.text())
-    .then((data) => {
-      const processedData = Processors.processCsvData(data);
-      const dataset = {
-        data: processedData,
-        info: {
-          id: data_file.name,
-          label: data_file.name
-        }
-      };
-      console.log("Dataset info");
-      console.log(dataset);
-      const config_json = JSON.parse(data_file.config);
-      this.setState({isLoading: false})
-      // addDataToMap action to inject dataset into kepler.gl instance
-      // Refer to https://github.com/keplergl/kepler.gl#6-how-to-add-data-to-map
-      if (includeConfig) {
-        this.props.dispatch(addDataToMap(
-                  {
-                    datasets: dataset, 
-                    config: config_json,
-                    options: {
-                      keepExistingConfig: true
-                    }
-                  }
-            )
-        );
-      } else {
-        this.props.dispatch(addDataToMap(
-                  {
-                    datasets: dataset,
-                    option: {
-                      keepExistingConfig: true
-                    }
-                  }
-             )
-          );
-        }
-      }
-    )
-    .catch(console.log);
-  };
-
 
   getMapConfig() {
     // retrieve kepler.gl store
@@ -192,10 +224,11 @@ class App extends Component {
   render() {
     return (
       <div style={{position: 'absolute', width: '100%', height: '100%', minHeight: '70vh'}}>
-        {/* <Button onClick={this.exportMapConfig}>Export Config</Button> */}
+        <button onClick={this.exportMapConfig}>Export Config</button>
         <DatasetSelector
           data_files={this.state.data_files}
           getAggData={this.getAggData}
+          filename2bool={this.state.filename2bool}
         />
         <Spinner isLoading={this.state.isLoading}/>
         <AutoSizer>

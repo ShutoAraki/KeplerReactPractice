@@ -7,17 +7,17 @@ const buttonStyle = {
   right: 0,
   width: '200px',
   height: '40px',
-  backgroundColor: '#1f7cf4',
   color: '#FFFFFF',
   cursor: 'pointer',
   border: 0,
   borderRadius: '3px',
   fontSize: '12px',
   margin:'30px',
+  backgroundImage: "linear-gradient(to right, rgba(78,125,203,0.5), rgba(65,148,222,0.5) 24%, rgba(0,163,163,0.5))"
 };
 
 const Button = ({onClick, children}) => (
-  <button style={buttonStyle} onClick={onClick}>{children}</button>
+  <button className="btn" style={buttonStyle} onClick={onClick}>{children}</button>
 );
 
 export default Button;
