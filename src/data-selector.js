@@ -11,38 +11,39 @@ class DatasetSelector extends React.Component {
         this.switchHexChomeText = this.switchHexChomeText.bind(this);
     }
 
+    removeA(arr) {
+        var what, a = arguments, L = a.length, ax;
+        while (L > 1 && arr.length) {
+            what = a[--L];
+            while ((ax= arr.indexOf(what)) !== -1) {
+                arr.splice(ax, 1);
+            }
+        }
+        return arr;
+    }
+
     addColumn = (event) => {
         const column_name = event.target.value;
-        this.state.selectedColumns.push(column_name);
-        console.log(this.state);
+        if (event.target.checked) {
+            this.state.selectedColumns.push(column_name);
+            console.log(JSON.stringify(this.state));
+        } else {
+            this.state.selectedColumns = this.removeA(this.state.selectedColumns, column_name);
+        }
+        console.log(this.state.selectedColumns);
     }
 
     submitSelections = () => {
-        const api_call = 'http://localhost:8000/columns/';
-        fetch(api_call, {
-            method: 'POST',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(this.state)
-        })
-        .then(res => res.json())
-        .then((data) => {
-            // this.props.data_files.columns = data;
-            // Change columns property in data_files 
-            this.props.data_files.map((data_file) => {
-                if (data_file.name in data) {
-                    data_file.columns = data[data_file.name];
-                    this.props.getData(data_file);
-                }
-            })
-            // console.log("submitSelections() =>");
-            // console.log(this.props.data_files);
-
-
-        })
-        .catch(console.log);
+       console.log(this.state);
+       const dataType = this.state.data_type.split(" ")[0].toLowerCase();
+       console.log("selectedColumns");
+       console.log(this.state.selectedColumns.filter(word => word.split("-")[0] === dataType + 'Data'));
+    //    const filteredData = this.state.selectedColumns.filter(word => word.split("-")[0] === dataType + 'Data').sort((a, b) => a.split("-")[1].localeCompare(b.split("-")[1]));
+       const filteredData = this.state.selectedColumns.filter(word => word.split("-")[0] === dataType + 'Data');
+       this.props.getAggData({
+           data_type: dataType,
+           selectedColumns: filteredData
+       });
     }
 
     switchHexChomeText() {
@@ -59,7 +60,12 @@ class DatasetSelector extends React.Component {
     render() {
 
         const WIDTH = 200;
+
         const dataSelectorStyle = {
+            backgroundColor: 'transparent'
+        };
+
+        const selectButtonStyle = {
             position: 'absolute',
             zIndex: 100,
             top: 10,
@@ -78,49 +84,60 @@ class DatasetSelector extends React.Component {
             width: WIDTH + 'px',
             height: '20px',
             margin: '30px',
-            textAlign: 'center'
+            // textAlign: 'center'
         };
         
         const scrollableMenu = {
-            height: 'auto',
-            maxHeight: '300px',
+            width: WIDTH + 'px',
+            height: '200px',
+            maxHeight: '200px',
             overflowX: 'hidden'
         };
 
         const cardStyle = {
             width: WIDTH + 'px',
+            margin: '5px',
+            fontSize: '1vw',
+            textAlight: 'left'
         };
 
         const dataType = this.state.data_type.split(" ")[0].toUpperCase();
 
+        // Grab only the current data type and sort it by the topic name alphabetically
+        const filteredDataFiles = this.props.data_files.filter(word => word.name.split("-")[0] === dataType.toLowerCase() + 'Data').sort((a, b) => a.name.split("-")[1].localeCompare(b.name.split("-")[1]));
+        {/* <select style={scrollableMenu} multiple={true} onChange={this.addColumn}>
+                                    {data_file.all_columns.map(column_name => (
+                                       <option style={cardStyle} value={data_file.name + ":" + column_name} key={column_name}>{column_name}</option> 
+                                    ))}
+                                </select> */}
         return (
-            <div id="data-selector">
-                <button style={dataSelectorStyle} className="btn btn-primary" onClick={this.switchHexChomeText}>
+            <div style={dataSelectorStyle} id="data-selector">
+                <button style={selectButtonStyle} className="btn btn-primary" onClick={this.switchHexChomeText}>
                     <b>{dataType}</b><small>{this.state.data_type.split(" ").slice(1, 3)}</small>
                 </button>
-                
+
                 <div style={accordionStyle} id="accordion">
-                    {this.props.data_files.filter(word => word.name.split("-")[0] === dataType.toLowerCase() + 'Data').map(data_file => (
+                    {filteredDataFiles.map(data_file => (
                         <div className="card" key={data_file.id}>
-                            <div className="card-header" id={"heading" + data_file.id}>
-                                <h5 className="mb-0">
-                                <button className="btn btn-link" data-toggle="collapse" data-target={"#collapse" + data_file.id} aria-expanded="true" aria-controls={"collapse" + data_file.id}>
+                                <button className="btn btn-link dropdown-toggle" data-toggle="collapse" data-target={"#collapse" + data_file.id} aria-expanded="true" aria-controls={"collapse" + data_file.id}>
                                     {data_file.name.split("-")[1]}
                                 </button>
-                                </h5>
-                            </div>
                             <div style={scrollableMenu} id={"collapse" + data_file.id} className="collapse" aria-labelledby={"heading" + data_file.id} data-parent="#accordion">
-                                <select className="card-body" multiple={true} onChange={this.addColumn}>
-                                    {data_file.all_columns.map(column_name => (
-                                       <option style={cardStyle} className="card-body" value={data_file.name + ":" + column_name} key={column_name}>{column_name}</option> 
-                                    ))}
-                                </select>
+                                {data_file.all_columns.map(column_name => (
+                                    <div style={cardStyle} className="form-check" key={column_name}>
+                                        <input className="form-check-input" type="checkbox" value={data_file.name + ':' + column_name} id="defaultCheck1" onChange={this.addColumn}/>
+                                        <label className="form-check-label" htmlFor="defaultCheck1">
+                                            {column_name}
+                                        </label>
+                                    </div>
+                                ))}
+                                
                             </div>
                         </div>
                     ))}
-            </div>
+                </div>
 
-                <Button onClick={this.submitSelections}>Load the data</Button>
+                <Button onClick={this.submitSelections}>Load the {dataType} data</Button>
             </div>
             
         ) 

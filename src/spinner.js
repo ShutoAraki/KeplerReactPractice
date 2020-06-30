@@ -2,9 +2,9 @@ import React from 'react';
 
 const spinnerStyle = {
     position: 'absolute',
-    zIndex: 100,
-    top: 75,
-    right: 380
+    zIndex: 200,
+    top: 40,
+    right: 350
 };
 
 function Spinner(props) {

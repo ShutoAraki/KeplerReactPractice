@@ -5,7 +5,7 @@ const buttonStyle = {
   zIndex: 100,
   bottom: 0,
   right: 0,
-  width: '120px',
+  width: '200px',
   height: '40px',
   backgroundColor: '#1f7cf4',
   color: '#FFFFFF',
