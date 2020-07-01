@@ -32,7 +32,8 @@ import KeplerGlSchema from 'kepler.gl/schemas';
 import DatasetSelector from './data-selector';
 import Spinner from './spinner';
 import downloadJsonFile from "./file-download";
-import defaultConfig from './defaultConfig.json';
+import defaultConfig from './data/defaultConfig.json';
+import greenLayer from './data/greenLayer';
 
 //TODO: Figure out what is happening to the environment variable
 // const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN; // eslint-disable-line
@@ -48,7 +49,8 @@ class App extends Component {
     this.state = {
       data_files: [],
       isLoading: false,
-      filename2bool: {}
+      filename2bool: {},
+      currentConfig: JSON.parse(defaultConfig)
     }
     this.getAggData = this.getAggData.bind(this);
   };
@@ -75,15 +77,37 @@ class App extends Component {
 
   resetConfig() {
     const config = JSON.parse(defaultConfig);
+    this.setState({currentConfig: config});
     const parsedConfig = KeplerGlSchema.parseSavedConfig(config);
     this.props.dispatch(receiveMapConfig(parsedConfig));
   };
 
   // It parses the naming format to extract appropriate data name string
   parseSelectedColumns(data_state) {
-    console.log(data_state);
     const selectedColumns = data_state.selectedColumns
     return data_state.data_type + ":" + selectedColumns.map(word => word.split(":")[1]).join('/');
+  };
+  
+  // Parses names like "hexData-Crime:crimeTotalRate"
+  // to grab appropriate layer config 
+  getLayerConfig(full_filename, data_name) {
+    const topic = full_filename.split(":")[0].split("-")[1];
+    const colname = full_filename.split(":")[1];
+    if (topic === "Environment") {
+      console.log("GREEN LAYER LOADING");
+      console.log(data_name);
+      const unique_id = Math.random().toString(36).substr(2, 9);
+      return greenLayer(unique_id, data_name, colname);
+    } else {
+      return null;
+    }
+  };
+
+  addLayerConfig(full_filename, data_name) {
+    const layerConfig = this.getLayerConfig(full_filename, data_name);
+    console.log("The layer config:");
+    console.log(layerConfig);
+    this.state.currentConfig.config.visState.layers.push(layerConfig);
   }
 
   // getAggData takes the dataType and selectedColumns from DatasetSelector
@@ -115,91 +139,10 @@ class App extends Component {
       console.log("Dataset info");
       console.log(dataset);
       this.resetConfig();
-      this.props.dispatch(addDataToMap({datasets: dataset}));
-      this.props.dispatch(addLayer(
-        {
-          "id": "v39d7oa",
-          "type": "geojson",
-          "config": {
-            "dataId": data_name,
-            "label": data_name,
-            "color": [
-              246,
-              209,
-              138,
-              255
-            ],
-            "columns": {
-              "geojson": "geometry"
-            },
-            "isVisible": true,
-            "visConfig": {
-              "opacity": 0.8,
-              "thickness": 0.5,
-              "colorRange": {
-                "name": "Global Warming",
-                "type": "sequential",
-                "category": "Uber",
-                "colors": [
-                  "#5A1846",
-                  "#900C3F",
-                  "#C70039",
-                  "#E3611C",
-                  "#F1920E",
-                  "#FFC300"
-                ]
-              },
-              "radius": 10,
-              "sizeRange": [
-                0,
-                10
-              ],
-              "radiusRange": [
-                0,
-                50
-              ],
-              "heightRange": [
-                0,
-                500
-              ],
-              "elevationScale": 5,
-              "hi-precision": false,
-              "stroked": false,
-              "filled": true,
-              "enable3d": false,
-              "wireframe": false
-            },
-            "textLabel": {
-              "field": null,
-              "color": [
-                255,
-                255,
-                255
-              ],
-              "size": 50,
-              "offset": [
-                0,
-                0
-              ],
-              "anchor": "middle"
-            }
-          },
-          "visualChannels": {
-            "colorField": {
-              "name": "crimeTotalRate",
-              "type": "real"
-            },
-            "colorScale": "quantile",
-            "sizeField": null,
-            "sizeScale": "linear",
-            "heightField": null,
-            "heightScale": "linear",
-            "radiusField": null,
-            "radiusScale": "linear"
-          }
-        }
-      ));
-
+      data_files.selectedColumns.map(full_filename => this.addLayerConfig(full_filename, data_name));
+      console.log(this.state.currentConfig);
+      this.props.dispatch(addDataToMap({datasets: dataset, config: this.state.currentConfig}));
+      // this.props.dispatch(addLayer(test_layer));
       this.setState({isLoading: false});
     })
     .catch(console.log);

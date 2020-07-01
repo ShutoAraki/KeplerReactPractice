@@ -328,5 +328,3 @@ tags
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,node,react,vim,visualstudiocode,python
 
-# Data folder
-src/data/*
