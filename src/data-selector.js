@@ -75,6 +75,7 @@ class DatasetSelector extends React.Component {
             right:100,
             width: WIDTH + 'px',
             height: '40px',
+            color: '#FFFFFF',
             margin: '30px',
             textAlign: 'center',
             backgroundImage: "linear-gradient(to right, rgba(78,125,203,0.7), rgba(65,148,222,0.7) 24%, rgba(0,163,163,0.7))",

@@ -13,7 +13,7 @@ const buttonStyle = {
   borderRadius: '3px',
   fontSize: '12px',
   margin:'30px',
-  backgroundImage: "linear-gradient(to right, rgba(78,125,203,0.5), rgba(65,148,222,0.5) 24%, rgba(0,163,163,0.5))"
+  backgroundImage: "linear-gradient(to right, rgba(78,125,203,0.7), rgba(65,148,222,0.7) 24%, rgba(0,163,163,0.7))"
 };
 
 const Button = ({onClick, children}) => (

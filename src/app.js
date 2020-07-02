@@ -29,11 +29,14 @@ import Processors from 'kepler.gl/processors';
 // Kepler.gl Schema APIs
 import KeplerGlSchema from 'kepler.gl/schemas';
 
+import DataFrame from 'dataframe-js';
 import DatasetSelector from './data-selector';
 import Spinner from './spinner';
 import downloadJsonFile from "./file-download";
 import defaultConfig from './data/defaultConfig.json';
 import greenLayer from './data/greenLayer';
+import jpickle from 'jpickle';
+import fs from 'file-system';
 
 //TODO: Figure out what is happening to the environment variable
 // const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN; // eslint-disable-line
@@ -65,8 +68,38 @@ class App extends Component {
       this.setState({data_files: data.filenames});
     })
     .catch(console.log);
+
+    // Read the DataFrame
+    // Set up http-server --cors ./
+    // on port 8081
+    const data_dir = 'http://127.0.0.1:8081/hexData-Core.csv';
+    const col2type = {
+      "hexNum": "integer",
+      "geometry": "geojson",
+      "lat": "real",
+      "lon": "real",
+      "in23Wards": "boolean",
+      "inTokyoMain": "boolean",
+      "totalPopulation": "real"
+    };
+    function convertType(colname, value) {
+      if ((col2type[colname] === "integer") || (col2type[colname] === "real")) {
+        return Number(value);
+      } else if (col2type[colname] === "boolean") {
+        return Boolean(value);
+      }
+    };
+    DataFrame.fromCSV(data_dir).then(df => {
+      df.show();
+      console.log(df.listColumns());
+      console.log(df.toArray());
+      const data = df.toArray();
+      // const processedData = data.map(val => );
+      // const processedData = Processors.processCsvData(df2.toCollection());
+      // console.log(processedData);
+    });
     
-    this.resetConfig();
+    this._resetConfig();
     this.state.data_files.map((filename) => {
       filename.all_columns.map((column_name) => {
         const full_filename = filename.name + ':' + column_name;
@@ -75,7 +108,7 @@ class App extends Component {
     });
   };
 
-  resetConfig() {
+  _resetConfig() {
     const config = JSON.parse(defaultConfig);
     this.setState({currentConfig: config});
     const parsedConfig = KeplerGlSchema.parseSavedConfig(config);
@@ -83,14 +116,14 @@ class App extends Component {
   };
 
   // It parses the naming format to extract appropriate data name string
-  parseSelectedColumns(data_state) {
+  _parseSelectedColumns(data_state) {
     const selectedColumns = data_state.selectedColumns
     return data_state.data_type + ":" + selectedColumns.map(word => word.split(":")[1]).join('/');
   };
   
   // Parses names like "hexData-Crime:crimeTotalRate"
   // to grab appropriate layer config 
-  getLayerConfig(full_filename, data_name) {
+  _getLayerConfig(full_filename, data_name) {
     const topic = full_filename.split(":")[0].split("-")[1];
     const colname = full_filename.split(":")[1];
     if (topic === "Environment") {
@@ -103,8 +136,8 @@ class App extends Component {
     }
   };
 
-  addLayerConfig(full_filename, data_name) {
-    const layerConfig = this.getLayerConfig(full_filename, data_name);
+  _addLayerConfig(full_filename, data_name) {
+    const layerConfig = this._getLayerConfig(full_filename, data_name);
     console.log("The layer config:");
     console.log(layerConfig);
     this.state.currentConfig.config.visState.layers.push(layerConfig);
@@ -127,8 +160,14 @@ class App extends Component {
     })
     .then(res => res.text())
     .then((data) => {
+      // const binary = fs.readFileSync(data, "binary");
+      // const unpickled = jpickle.loads(binary);
+      // console.log(unpickled);
+      // const processedData = Processors.processCsvData(unpickled);
       const processedData = Processors.processCsvData(data);
-      const data_name = this.parseSelectedColumns(data_files);
+      console.log("PROCESSED DATA");
+      console.log(processedData);
+      const data_name = this._parseSelectedColumns(data_files);
       const dataset = {
         data: processedData,
         info: {
@@ -138,9 +177,8 @@ class App extends Component {
       };
       console.log("Dataset info");
       console.log(dataset);
-      this.resetConfig();
-      data_files.selectedColumns.map(full_filename => this.addLayerConfig(full_filename, data_name));
-      console.log(this.state.currentConfig);
+      this._resetConfig();
+      data_files.selectedColumns.map(full_filename => this._addLayerConfig(full_filename, data_name));
       this.props.dispatch(addDataToMap({datasets: dataset, config: this.state.currentConfig}));
       // this.props.dispatch(addLayer(test_layer));
       this.setState({isLoading: false});
